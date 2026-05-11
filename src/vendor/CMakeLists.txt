@@ -1,6 +1,9 @@
 include(FetchContent)
 
 # ── bgfx (via the unofficial CMake wrapper) ──────────────────────────────────
+
+set(BGFX_BUILD_WAYLAND ON CACHE BOOL "" FORCE)
+
 FetchContent_Declare(
     bgfx
     GIT_REPOSITORY https://github.com/bkaradzic/bgfx.cmake.git
@@ -43,3 +46,12 @@ FetchContent_Declare(
 )
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
+
+
+FetchContent_Declare(
+    taskflow
+    GIT_REPOSITORY https://github.com/taskflow/taskflow.git
+    GIT_TAG        master
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(taskflow)

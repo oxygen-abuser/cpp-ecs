@@ -6,13 +6,15 @@ target_sources(ecs
   src/ecs-resource.cpp
   src/ecs-world.cpp
   src/ecs-system.cpp
+  src/ecs-system-traits.cpp
+  src/ecs-schedulable.cpp
   src/ecs-query.cpp
   src/ecs-events.cpp
   src/ecs-system-context.cpp
   src/ecs-app.cpp
   tests/query-compile-test.cpp
   tests/system-compile-test.cpp
-  PRIVATE FILE_SET CXX_MODULES FILES
+  PUBLIC FILE_SET CXX_MODULES FILES
   modules/ecs.cppm
 )
 
@@ -30,6 +32,8 @@ add_executable(ecs_tests
     tests/test_system.cpp
     tests/test_commands.cpp
     tests/test_app.cpp
+    tests/test_schedulable.cpp
+    tests/test_resources.cpp
 )
 
 target_include_directories(ecs_tests PRIVATE ./include)

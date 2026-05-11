@@ -3,14 +3,25 @@
 #include "ecs-world.hpp"
 #include <algorithm>
 #include <functional>
+#include <span>
 
 namespace ecs::system {
 
-static auto update_set(world::world &w, std::span<system_config> set) {
-  auto run = [&w](system_config &config) { config.run(w); };
-  auto apply_commands = [&w](system_config &config) { config.apply(w); };
-  std::ranges::for_each(set, run);
-  std::ranges::for_each(set, apply_commands);
+static auto update_set(world::world &w,
+                       std::span<schedulable::schedulable> set) -> void {
+  for (auto &s : set) {
+    if (s.condition_ && !s.condition_->run(w)) {
+      continue;
+    }
+    for (auto &cfg : s.systems_) {
+      cfg.run(w);
+    }
+  }
+  for (auto &s : set) {
+    for (auto &cfg : s.systems_) {
+      cfg.apply(w);
+    }
+  }
 }
 
 auto scheduler::create() -> scheduler { return scheduler{}; }

@@ -58,6 +58,20 @@ public:
     return *this;
   }
 
+  auto add_system(system::system_bind_point bp,
+                  schedulable::schedulable_set set) & -> app & {
+    for (auto &s : set.schedulables_)
+      scheduler_.add_system(bp, std::move(s));
+    return *this;
+  }
+
+  auto add_system(system::system_bind_point bp,
+                  schedulable::schedulable_set set) && -> app && {
+    for (auto &s : set.schedulables_)
+      scheduler_.add_system(bp, std::move(s));
+    return std::move(*this);
+  }
+
   // events
   template <typename T> auto add_event() & -> app & {
     auto &reg = world_.resource<events::event_registry>();
