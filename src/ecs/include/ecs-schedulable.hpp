@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ecs-access-set.hpp"
 #include "ecs-system-traits.hpp"
 #include <optional>
 #include <vector>
@@ -8,6 +9,7 @@ namespace ecs::schedulable {
 struct schedulable {
   std::vector<system::system_config> systems_;
   std::optional<system::condition_config> condition_;
+  access::access_set set_;
   bool chained_{false};
 };
 
@@ -39,7 +41,9 @@ template <typename Fn>
 struct into_schedulable_set<Fn> {
   static auto convert(Fn fn) {
     schedulable s;
-    s.systems_.push_back(system::system_config::create(fn, ""));
+    auto config = system::system_config::create(fn, "");
+    s.set_ = config.set_;
+    s.systems_.push_back(std::move(config));
     return schedulable_set{.schedulables_ = {std::move(s)}};
   }
 };
@@ -54,39 +58,43 @@ template <> struct into_schedulable_set<schedulable_set> {
   static auto convert(schedulable_set &&s) -> schedulable_set { return s; }
 };
 
+template <typename... Args> auto systems(Args &&...args) -> schedulable_set {
+  schedulable_set result;
+  schedulable current;
 
-template<typename... Args>
-auto systems(Args&&... args) -> schedulable_set {
-    schedulable_set result;
-    schedulable current;
+  auto flush_current = [&]() {
+    if (!current.systems_.empty()) {
+      result.schedulables_.push_back(std::move(current));
+      current = schedulable{};
+    }
+  };
 
-    auto flush_current = [&]() {
-        if (!current.systems_.empty()) {
-            result.schedulables_.push_back(std::move(current));
-            current = schedulable{};
+  (
+      [&](auto &&arg) {
+        using T = std::remove_cvref_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, schedulable_set>) {
+          flush_current();
+          for (auto &s : arg.schedulables_)
+            result.schedulables_.push_back(std::move(s));
+        } else if constexpr (std::is_same_v<T, schedulable>) {
+          flush_current();
+          result.schedulables_.push_back(std::move(arg));
+        } else {
+          // must be a plain system function
+          auto config = system::system_config::create(
+              std::forward<decltype(arg)>(arg), "");
+
+          if (current.set_.conflicts(config.set_)) {
+            flush_current();
+          }
+
+          current.set_.merge(config.set_);
+          current.systems_.push_back(std::move(config));
         }
-    };
+      }(std::forward<Args>(args)),
+      ...);
 
-    (
-        [&](auto&& arg) {
-            using T = std::remove_cvref_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, schedulable_set>) {
-                flush_current();
-                for (auto& s : arg.schedulables_)
-                    result.schedulables_.push_back(std::move(s));
-            } else if constexpr (std::is_same_v<T, schedulable>) {
-                flush_current();
-                result.schedulables_.push_back(std::move(arg));
-            } else {
-                // must be a plain system function
-                current.systems_.push_back(
-                    system::system_config::create(
-                        std::forward<decltype(arg)>(arg), ""));
-            }
-        }(std::forward<Args>(args)),
-    ...);
-
-    flush_current();
-    return result;
+  flush_current();
+  return result;
 }
 } // namespace ecs::schedulable

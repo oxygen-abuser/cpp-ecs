@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "ecs-access-set.hpp"
 #include "ecs-commands.hpp"
 #include "ecs-resource.hpp"
 #include "ecs-system-context.hpp"
@@ -132,6 +133,12 @@ consteval auto local_index_before() -> std::size_t {
 template <typename Tuple>
 using unpack_locals_t = typename unpack_locals<Tuple>::type;
 
+
+template <typename Args> auto make_access_set() -> ecs::access::access_set {
+  return ecs::access::extract_access<Args>::get();
+}
+
+
 enum class system_bind_point {
   // initialization
   init,
@@ -150,6 +157,7 @@ enum class system_bind_point {
 template <typename Ret> struct system_config_base {
   std::string name_;
   std::function<Ret(system_context &)> runner_;
+  ecs::access::access_set set_;
 
   auto run(ecs::world::world &world) -> Ret {
     auto context = system_context{world, commands_};
@@ -171,6 +179,7 @@ template <typename Ret> struct system_config_base {
     config.name_ = std::forward<std::string>(name);
     config.runner_ = std::move(runner);
     config.commands_ = commands::commands{};
+    config.set_ = make_access_set<args_t>();
 
     return config;
   }
