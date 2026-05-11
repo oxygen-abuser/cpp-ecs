@@ -34,6 +34,7 @@ add_executable(ecs_tests
     tests/test_app.cpp
     tests/test_schedulable.cpp
     tests/test_resources.cpp
+    tests/test_graph.cpp
 )
 
 target_include_directories(ecs_tests PRIVATE ./include)

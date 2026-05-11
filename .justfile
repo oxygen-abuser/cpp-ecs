@@ -6,3 +6,6 @@ build: configure
 
 run: build
     ./build/src/engine
+
+test_ecs: build
+    ./build/src/ecs/ecs_tests

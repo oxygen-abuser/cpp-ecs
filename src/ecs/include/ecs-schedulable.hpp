@@ -25,7 +25,7 @@ struct schedulable_set {
         s.condition_ =
             system::and_condition(std::move(*s.condition_), cond_cfg);
       } else {
-        s.condition_ = std::move(cond_cfg);
+        s.condition_ = cond_cfg;
       }
     }
     return *this;
