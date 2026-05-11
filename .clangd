@@ -1,2 +1,26 @@
 CompileFlags:
-	CompilationDatabase: ./build
+  CompilationDatabase: "./build"
+  Add:
+    - -Wall
+    - -Wextra
+    - -Wshadow
+    - -Wnon-virtual-dtor
+    - -Wcast-align
+    - -Wunused
+    - -Woverloaded-virtual
+    - -Wpedantic
+    - -Wconversion
+    - -Wsign-conversion
+    - -Wnull-dereference
+    - -Wdouble-promotion
+    - -Wformat=2
+
+---
+
+If:
+  PathMatch: ".*/build/_deps/.*"
+Diagnostics:
+  Suppress: "*"
+CompileFlags:
+  Remove:
+    - -std=c++*
